@@ -50,7 +50,7 @@ class TreeParityMachine ():
 		self.UDPSock = socket(AF_INET,SOCK_DGRAM)
 		self.UDPSock.bind(self.myaddr)
 		
-#		self.sender_UDPSock = socket(AF_INET,SOCK_DGRAM)
+		self.sender_UDPSock = socket(AF_INET,SOCK_DGRAM)
 
 		self.logfilename = "log_" + str( self.myaddr[1] ) 
 		f = open (self.logfilename, 'w')
@@ -60,6 +60,12 @@ class TreeParityMachine ():
 		receiver_thread = threading.Thread(target=self.reciever, args=() ) 
 		receiver_thread.start()
 
+		print """
+			Started tpm with
+				myaddr : {0}
+				partner_addr_list : {1}
+				IS_MASTER : {2}
+		""".format (self.myaddr, self.partner_addr_list, self.IS_MASTER)
 		
 	def log(self, a):
 		f = open (self.logfilename, 'a')
@@ -91,14 +97,14 @@ class TreeParityMachine ():
 		data_output = " ".join( [str(self.SHARE_OUTPUT), str(self.output)] )
 		
 		for addr in self.partner_addr_list :
-			self.UDPSock.sendto(data_input, addr)			
+			self.sender_UDPSock.sendto(data_input, addr)			
 		for addr in self.partner_addr_list :
-			self.UDPSock.sendto(data_output, addr)
+			self.sender_UDPSock.sendto(data_output, addr)
 
 	def compute(self):
 		
 		self.iterations += 1
-		
+		print '.. '		
 		self.output = 1
 		self.sigmas = []
 		
@@ -195,7 +201,7 @@ class TreeParityMachine ():
 					data = " ".join( [str(self.SHARE_OUTPUT), str(self.output)] )					
 					for addr in self.partner_addr_list :
 #						self.sender_UDPSock.sendto(data, addr)
-						self.UDPSock.sendto(data, addr)
+						self.sender_UDPSock.sendto(data, addr)
 				elif int(s[0]) == self.SHARE_OUTPUT :
 					s_list = s.split(' ')
 					self.other_outputs[ addr ] = int(s_list[1])
@@ -233,31 +239,8 @@ def is_unordered_equal (l1, l2):
 			return False
 	return True	
 		
-		
-if __name__ == "__main__" :
 
-#	addr_list = []
-#	
-#	addr_list.append(("127.0.0.1", 11111))
-#	addr_list.append(("127.0.0.1", 22222))
-#	addr_list.append(("127.0.0.1", 33333))
-	
-	
-#	b = TreeParityMachine (
-#						K=3, L=4, N=3,
-#						myaddr = ("127.0.0.1", 22222),
-#						partner_addr_list = [("127.0.0.1", 11111)], 
-#						IS_MASTER = False
-#					)
-#
-#	a = TreeParityMachine (
-#						K=3, L=4, N=3,
-#						myaddr = ("127.0.0.1", 11111),
-#						partner_addr_list = [("127.0.0.1", 22222)], 
-#						IS_MASTER = True
-#					)
-	
-	
+def test():
 	b = TreeParityMachine (
 						K=3, L=1, N=2,
 						myaddr = ("127.0.0.1", 22222),
@@ -278,3 +261,43 @@ if __name__ == "__main__" :
 						IS_MASTER = True
 					)
 
+
+
+if __name__ == "__main__" :
+	
+	myaddr = ("127.0.0.1", 11111)
+	partner_addr_list = []
+	IS_MASTER = False	
+	
+	args = sys.argv	
+	if len(args) == 0:
+		print """ usage : tpm.py [-m] <IP addr 1> <IP addr 2> ... """
+	for x in args[1:]:
+		if x == '-m':
+			IS_MASTER = True
+			continue
+		else:
+			partner_addr_list.append((x, 11111))
+		
+	t = TreeParityMachine (
+						K=3, L=1, N=3,
+						myaddr = myaddr,
+						partner_addr_list = partner_addr_list, 
+						IS_MASTER = IS_MASTER
+					)
+
+#	b = TreeParityMachine (
+#						K=3, L=4, N=3,
+#						myaddr = ("127.0.0.1", 22222),
+#						partner_addr_list = [("127.0.0.1", 11111)], 
+#						IS_MASTER = False
+#					)
+#
+#	a = TreeParityMachine (
+#						K=3, L=4, N=3,
+#						myaddr = ("127.0.0.1", 11111),
+#						partner_addr_list = [("127.0.0.1", 22222)], 
+#						IS_MASTER = True
+#					)
+	
+	
