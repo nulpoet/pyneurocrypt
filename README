@@ -1,0 +1,16 @@
+
+Key Exchange Protocol based on Synchronization of Tree Parity Machines
+
+--------------------------------------------------------------------------------
+
+
+Dependencies : python (>=2.6)
+
+
+How to use
+--------------------------------------------------------------------------------
+Step 1.  Run for non-master partners,
+            python keysync.py <IP addr of partner 1> <IP addr of partner 2>
+Step 2.  Run for the master partner (One Parner who distribute random inputs to
+         all participating partners),
+            python keysync.py -m <IP addr of partner 1> <IP addr of partner 2>
