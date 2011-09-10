@@ -2,9 +2,7 @@
 import random
 from socket import *
 import threading
-
-def log(a):
-	print "[log] " + str(a)
+import sys
 
 class TreeParityMachine ():
 	""" ... """
@@ -16,10 +14,11 @@ class TreeParityMachine ():
 
 	SYNC_COUNT_LIMIT = 100
 
+
 	def __init__(self, K, L, N, myaddr, partner_addr_list, IS_MASTER):
 		
-		self.iterations = 0
-		
+		self.GOT_INPUT = False		
+		self.iterations = 0		
 		self.IS_MASTER = IS_MASTER
 		self.sync_count = 0
 		
@@ -53,14 +52,23 @@ class TreeParityMachine ():
 		
 #		self.sender_UDPSock = socket(AF_INET,SOCK_DGRAM)
 
+		self.logfilename = "log_" + str( self.myaddr[1] ) 
+		f = open (self.logfilename, 'w')
+		f.close ()
+		
+
 		receiver_thread = threading.Thread(target=self.reciever, args=() ) 
 		receiver_thread.start()
 
-		if self.IS_MASTER :
-			self.generate_x()
+		
+	def log(self, a):
+		f = open (self.logfilename, 'a')
+		f.write (str(self.myaddr) +" :: "+ str(a) + "\n")
+		f.close()
+
 
 	def generate_x (self):
-		x = []		
+		x = []
 		for i in range(self.K) :
 			l = []
 			for j in range(self.N) :
@@ -70,9 +78,10 @@ class TreeParityMachine ():
 #		random.seed(x)
 		
 		self.x = x
-#		log (str(self.myaddr) + " generated : " + str(self.x))
+#		self.log (str(self.myaddr) + " generated : " + str(self.x))
 		
 		self.compute()
+		self.GOT_INPUT = True
 		
 		data_input = str(self.SHARE_INPUT) + " "
 		for i in range(self.K) :
@@ -82,9 +91,8 @@ class TreeParityMachine ():
 		data_output = " ".join( [str(self.SHARE_OUTPUT), str(self.output)] )
 		
 		for addr in self.partner_addr_list :
-#			self.sender_UDPSock.sendto(data_input, addr)
-#			self.sender_UDPSock.sendto(data_output, addr)
-			self.UDPSock.sendto(data_input, addr)
+			self.UDPSock.sendto(data_input, addr)			
+		for addr in self.partner_addr_list :
 			self.UDPSock.sendto(data_output, addr)
 
 	def compute(self):
@@ -106,7 +114,7 @@ class TreeParityMachine ():
 				self.sigmas.append(-1)
 				self.output *= -1
 		
-#		log( str((self.myaddr, self.x, self.w, self.sigmas)) )
+#		self.log( str((self.myaddr, self.x, self.w, self.sigmas)) )
 
 	def theta(self, x, y):
 		if x == y :
@@ -118,7 +126,7 @@ class TreeParityMachine ():
 	def learn(self):
 		""" ... """
 		
-#		log ("\n----------- Here -----------\n")
+		self.log ("\nHere\n")
 		
 		is_equal = 1
 		for v in self.other_outputs.values() :
@@ -126,13 +134,13 @@ class TreeParityMachine ():
 				is_equal = 0
 		
 		if is_equal == 0 :
-			log("'''''''''''''''\nsync break at \n'''''''''''''''''" + str(self.sync_count))
+			self.log("  sync break at" + str(self.sync_count) + "\n'''''''''''''''''" )
 			self.sync_count = 0
-#			log( "-----------" + str(self.other_outputs) + " " + str(self.output) )
+#			self.log( "-----------" + str(self.other_outputs) + " " + str(self.output) )
 			return
 		else :
 			self.sync_count += 1
-#			log( "-----------" + "is_equal 1")
+#			self.log( "-----------" + "is_equal 1")
 			
 			
 			for i in range(self.K) :			
@@ -145,11 +153,14 @@ class TreeParityMachine ():
 					elif self.w[i][j] < -self.L :
 						self.w[i][j] =  -self.L
 			
-#			log( str(self.myaddr) + " after leanring " + str(self.w) )
+#			self.log( str(self.myaddr) + " after leanring " + str(self.w) )
 			
 	
 	def reciever(self):
 		
+		if self.IS_MASTER :
+			self.generate_x()
+			
 		
 		# Receive messages
 		while 1:
@@ -158,122 +169,112 @@ class TreeParityMachine ():
 			if not data:
 				print "Client has exited!"
 				break
-			else:		
-				
-#				log( str(self.myaddr) + " received '" + str(data) + "' from " + str(addr) )
-				
-				s = str(data)
-				
+			else:
+				self.log(" received '" + str(data) + "' from " + str(addr) )				
+				s = str(data)								
 				if int(s[0]) == self.START_SYNC :
 					self.master_addr = addr
 					print "sync started"
-					continue
-					
 				elif int(s[0]) == self.DONE_SYNC :
 					print "sync done with key : " + str(self.w)
-					continue
-					
 				elif int(s[0]) == self.SHARE_INPUT :
 					s_list = s.split(' ')
 					x_list = s_list[1].split(':')
 					x = []
 					cnt = 0
-					#log(x_list)
+					#self.log(x_list)
 					for i in range(self.K) :
 						l = []
-						for j in range(self.N) :
+						for j in range(self.N) :							
 							l.append ( int(x_list[cnt]) )							
 							cnt+=1
-						x.append(l)
-					
+						x.append(l)					
 					self.x = x
-					self.compute()
-					
-					data = " ".join( [str(self.SHARE_OUTPUT), str(self.output)] )
-					
+					self.compute()					
+					self.GOT_INPUT = True					
+					data = " ".join( [str(self.SHARE_OUTPUT), str(self.output)] )					
 					for addr in self.partner_addr_list :
 #						self.sender_UDPSock.sendto(data, addr)
 						self.UDPSock.sendto(data, addr)
-						
-					continue
-						
 				elif int(s[0]) == self.SHARE_OUTPUT :
 					s_list = s.split(' ')
 					self.other_outputs[ addr ] = int(s_list[1])
-					
-					
-#					log( "self.other_outputs.keys() :: " + str(type(self.other_outputs.keys())) + str(self.other_outputs.keys()) )
-#					log( "self.partner_addr_list :: " + str(type(self.partner_addr_list)) + str(self.partner_addr_list) )
-					
-					if self.other_outputs.keys() == self.partner_addr_list :
-						self.learn()
-#					log( str(self.myaddr) + " after learning " + str(self.w) )
-					self.x = None
-					self.other_outputs = {}
-					
-					if self.sync_count == self.SYNC_COUNT_LIMIT :		
-						print "\n\n" + str(self.myaddr) + "\nSYNCED in "+str(self.iterations)+" iterations with key : \n**************\n" + str(self.w) + "\n**************\n"
-						data = str(self.DONE_SYNC)
-						for addr in self.partner_addr_list :
-#							self.sender_UDPSock.sendto( data, addr)						
-							self.UDPSock.sendto( data, addr)
-							
-						break
-					elif self.IS_MASTER == True :
-						self.generate_x()
-					
-					continue
 				else : 
 					print "Invalid received message '", data,"'"
+				
+#				if self.IS_MASTER:
+#					print self.other_outputs.keys(), self.partner_addr_list
+				
+				if is_unordered_equal(self.other_outputs.keys(), self.partner_addr_list):
+					if self.GOT_INPUT == True:
+						self.learn()
+#					self.log( str(self.myaddr) + " after learning " + str(self.w) )						
+						self.other_outputs = {}
+						self.GOT_INPUT = False
+						
+						if self.sync_count == self.SYNC_COUNT_LIMIT:
+							print "\n\n" + str(self.myaddr) + "\nSYNCED in "+str(self.iterations)+" iterations with key : \n**************\n" + str(self.w) + "\n**************\n"													
+							sys.exit()
+						elif self.IS_MASTER == True :
+							self.generate_x()
+					else:
+						print self.myaddr, " SHARE_OUTPUTs recvd too early."
 		
 		
 		# Close socket
 		self.UDPSock.close()
-		
+
+def is_unordered_equal (l1, l2):	
+	for x in l1:
+		if not(x in l2):
+			return False
+	for x in l2:
+		if not(x in l1):
+			return False
+	return True	
 		
 		
 if __name__ == "__main__" :
 
-	addr_list = []
+#	addr_list = []
+#	
+#	addr_list.append(("127.0.0.1", 11111))
+#	addr_list.append(("127.0.0.1", 22222))
+#	addr_list.append(("127.0.0.1", 33333))
 	
-	addr_list.append(("127.0.0.1", 11111))
-	addr_list.append(("127.0.0.1", 22222))
-	addr_list.append(("127.0.0.1", 33333))
-
-#	a = TreeParityMachine (3,4,3, 
-#						("127.0.0.1", 11111), 
-#						[("127.0.0.1", 22222)], 
-#						IS_MASTER=False
+	
+#	b = TreeParityMachine (
+#						K=3, L=4, N=3,
+#						myaddr = ("127.0.0.1", 22222),
+#						partner_addr_list = [("127.0.0.1", 11111)], 
+#						IS_MASTER = False
 #					)
-#	b = TreeParityMachine (3,4,3, 
-#						("127.0.0.1", 22222),
-#						[("127.0.0.1", 11111)], 
-#						IS_MASTER=True
+#
+#	a = TreeParityMachine (
+#						K=3, L=4, N=3,
+#						myaddr = ("127.0.0.1", 11111),
+#						partner_addr_list = [("127.0.0.1", 22222)], 
+#						IS_MASTER = True
 #					)
-
 	
-	a = TreeParityMachine (1,1,3, 
-						("127.0.0.1", 11111), 
-						[("127.0.0.1", 22222), ("127.0.0.1", 33333)], 
-						IS_MASTER=False
-					)
-	b = TreeParityMachine (1,1,3, 
-						("127.0.0.1", 22222), 
-						[("127.0.0.1", 11111), ("127.0.0.1", 33333)], 
-						IS_MASTER=False
-					)
-	c = TreeParityMachine (1,1,3, 
-						("127.0.0.1", 33333), 
-						[("127.0.0.1", 11111), ("127.0.0.1", 22222)], 
-						IS_MASTER=True
-					)
 	
+	b = TreeParityMachine (
+						K=3, L=1, N=2,
+						myaddr = ("127.0.0.1", 22222),
+						partner_addr_list = [("127.0.0.1", 11111), ("127.0.0.1", 33333)], 
+						IS_MASTER = False
+					)
+	c = TreeParityMachine (
+						K=3, L=1, N=2,
+						myaddr = ("127.0.0.1", 33333),
+						partner_addr_list = [("127.0.0.1", 11111), ("127.0.0.1", 22222)], 
+						IS_MASTER = False
+					)
 
-	"""	
-	x = a.generate_x()
-	print a.w
-	print x
-	a.learn(x, 1)
-	print "----"
-	print a.w
-	"""
+	a = TreeParityMachine (
+						K=3, L=1, N=2,
+						myaddr = ("127.0.0.1", 11111),
+						partner_addr_list = [("127.0.0.1", 22222), ("127.0.0.1", 33333)], 
+						IS_MASTER = True
+					)
+
