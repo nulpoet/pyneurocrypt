@@ -30,6 +30,7 @@ class Generator():
             port = self.port_base + i
             self.start_machine(port, master=False)
         
+        # Master is started last
         self.start_machine(self.port_base, master=True)
         
             
