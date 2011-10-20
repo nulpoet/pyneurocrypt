@@ -1,8 +1,6 @@
 import sys
-
 from tpm import TreeParityMachine
 import config
-
 
 if __name__ == "__main__" :
     
@@ -28,3 +26,5 @@ if __name__ == "__main__" :
                         partner_addr_list = partner_addr_list, 
                         IS_MASTER = IS_MASTER
                     )
+
+

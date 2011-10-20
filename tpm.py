@@ -3,6 +3,8 @@ import random
 from socket import *
 import threading
 import sys
+import __builtin__
+import config
 
 class TreeParityMachine ():
 	""" ... """
@@ -43,7 +45,7 @@ class TreeParityMachine ():
 
 
 		# Set the socket parameters		
-		self.buf = 10 + 2 * self.N * self.K
+		self.buf = 10 + 3 * self.N * self.K
 		self.myaddr = myaddr
 		
 		# Create socket and bind to address
@@ -61,11 +63,14 @@ class TreeParityMachine ():
 		receiver_thread.start()
 
 		print """
-			Started tpm with
-				myaddr : {0}
-				partner_addr_list : {1}
-				IS_MASTER : {2}
-		""".format (self.myaddr, self.partner_addr_list, self.IS_MASTER)
+		Started tpm with
+			myaddr : {0}
+			partner_addr_list : {1}
+			IS_MASTER : {2}
+			K : {3}
+			L : {4}
+			N : {5}
+		""".format (self.myaddr, self.partner_addr_list, self.IS_MASTER, self.K, self.L, self.N)
 		
 	def log(self, a):
 		f = open (self.logfilename, 'a')
@@ -77,13 +82,17 @@ class TreeParityMachine ():
 		x = []
 		for i in range(self.K) :
 			l = []
-			for j in range(self.N) :
-				l.append ( random.randint(-self.L, self.L) )				
-			x.append (l)
+			for j in range(self.N):
+				temp = random.randint(0, 1)
+				if temp == 0:
+					l.append(-1)
+				else:
+					l.append(1)
+			x.append(l)
 		
 #		random.seed(x)
 		
-		self.x = x
+		self.x = x		
 #		self.log (str(self.myaddr) + " generated : " + str(self.x))
 		
 		self.compute()
@@ -93,7 +102,9 @@ class TreeParityMachine ():
 		for i in range(self.K) :
 			for j in range(self.N) :
 				data_input += str(self.x[i][j]) + ':'
-				
+		
+#		print "data_input : ", data_input
+		
 		data_output = " ".join( [str(self.SHARE_OUTPUT), str(self.output)] )
 		
 		for addr in self.partner_addr_list :
@@ -104,7 +115,11 @@ class TreeParityMachine ():
 	def compute(self):
 		
 		self.iterations += 1
-		print '.. '		
+		s = '.'
+		for i in range(self.iterations % 10):
+			s += '.'
+		print s
+				
 		self.output = 1
 		self.sigmas = []
 		
@@ -164,6 +179,14 @@ class TreeParityMachine ():
 	
 	def reciever(self):
 		
+#		import time
+#		s = '.'
+#		while True:
+#			time.sleep(1)
+#			print s
+#			s += '.'
+			
+		
 		if self.IS_MASTER :
 			self.generate_x()
 			
@@ -177,7 +200,8 @@ class TreeParityMachine ():
 				break
 			else:
 				self.log(" received '" + str(data) + "' from " + str(addr) )				
-				s = str(data)								
+				s = str(data)
+#				print "s : ", s
 				if int(s[0]) == self.START_SYNC :
 					self.master_addr = addr
 					print "sync started"
@@ -186,6 +210,10 @@ class TreeParityMachine ():
 				elif int(s[0]) == self.SHARE_INPUT :
 					s_list = s.split(' ')
 					x_list = s_list[1].split(':')
+					
+#					print "s_list : ", s_list
+#					print "x_list : ", x_list
+					
 					x = []
 					cnt = 0
 					#self.log(x_list)
@@ -211,7 +239,7 @@ class TreeParityMachine ():
 #				if self.IS_MASTER:
 #					print self.other_outputs.keys(), self.partner_addr_list
 				
-				if is_unordered_equal(self.other_outputs.keys(), self.partner_addr_list):
+				if is_unordered_partner_list_equal (self.other_outputs.keys(), self.partner_addr_list):
 					if self.GOT_INPUT == True:
 						self.learn()
 #					self.log( str(self.myaddr) + " after learning " + str(self.w) )						
@@ -219,7 +247,7 @@ class TreeParityMachine ():
 						self.GOT_INPUT = False
 						
 						if self.sync_count == self.SYNC_COUNT_LIMIT:
-							print "\n\n" + str(self.myaddr) + "\nSYNCED in "+str(self.iterations)+" iterations with key : \n**************\n" + str(self.w) + "\n**************\n"													
+							print "\nSYNCED in "+str(self.iterations)+" iterations with key : \n" + str(self.w) + "\n"													
 							sys.exit()
 						elif self.IS_MASTER == True :
 							self.generate_x()
@@ -230,74 +258,52 @@ class TreeParityMachine ():
 		# Close socket
 		self.UDPSock.close()
 
-def is_unordered_equal (l1, l2):	
+def is_unordered_partner_list_equal (l1, l2):
+	
+	if __builtin__.local:
+		return len(l1) == len(l2)
+	
+	tl1 = []
+	tl2 = []
 	for x in l1:
-		if not(x in l2):
-			return False
+		tl1.append(x[0])
 	for x in l2:
-		if not(x in l1):
+		tl2.append(x[0])
+		
+	for x in tl1:
+		if not(x in tl2):
+			return False
+	for x in tl2:
+		if not(x in tl1):
 			return False
 	return True	
 		
 
-def test():
+def localtest():
+	
+	# testing 3 TPMs	
+	__builtin__.local = True
+	
 	b = TreeParityMachine (
-						K=3, L=1, N=2,
-						myaddr = ("127.0.0.1", 22222),
-						partner_addr_list = [("127.0.0.1", 11111), ("127.0.0.1", 33333)], 
+						K=config.K, L=config.L, N=config.N,
+						myaddr = ("", 22222),
+						partner_addr_list = [("localhost", 11111), ("localhost", 33333)], 
 						IS_MASTER = False
 					)
 	c = TreeParityMachine (
-						K=3, L=1, N=2,
-						myaddr = ("127.0.0.1", 33333),
-						partner_addr_list = [("127.0.0.1", 11111), ("127.0.0.1", 22222)], 
+						K=config.K, L=config.L, N=config.N,
+						myaddr = ("", 33333),
+						partner_addr_list = [("localhost", 11111), ("localhost", 22222)], 
 						IS_MASTER = False
 					)
 
 	a = TreeParityMachine (
-						K=3, L=1, N=2,
-						myaddr = ("127.0.0.1", 11111),
-						partner_addr_list = [("127.0.0.1", 22222), ("127.0.0.1", 33333)], 
+						K=config.K, L=config.L, N=config.N,
+						myaddr = ("", 11111),
+						partner_addr_list = [("localhost", 22222), ("localhost", 33333)], 
 						IS_MASTER = True
 					)
 
 
-
 if __name__ == "__main__" :
-	
-	myaddr = ("127.0.0.1", 11111)
-	partner_addr_list = []
-	IS_MASTER = False	
-	
-	args = sys.argv	
-	if len(args) == 0:
-		print """ usage : tpm.py [-m] <IP addr 1> <IP addr 2> ... """
-	for x in args[1:]:
-		if x == '-m':
-			IS_MASTER = True
-			continue
-		else:
-			partner_addr_list.append((x, 11111))
-		
-	t = TreeParityMachine (
-						K=3, L=1, N=3,
-						myaddr = myaddr,
-						partner_addr_list = partner_addr_list, 
-						IS_MASTER = IS_MASTER
-					)
-
-#	b = TreeParityMachine (
-#						K=3, L=4, N=3,
-#						myaddr = ("127.0.0.1", 22222),
-#						partner_addr_list = [("127.0.0.1", 11111)], 
-#						IS_MASTER = False
-#					)
-#
-#	a = TreeParityMachine (
-#						K=3, L=4, N=3,
-#						myaddr = ("127.0.0.1", 11111),
-#						partner_addr_list = [("127.0.0.1", 22222)], 
-#						IS_MASTER = True
-#					)
-	
-	
+	localtest()
