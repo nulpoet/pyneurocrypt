@@ -5,6 +5,7 @@ import threading
 import sys
 import __builtin__
 import config
+import time
 
 class TreeParityMachine ():
 	""" ... """
@@ -59,8 +60,8 @@ class TreeParityMachine ():
 		f.close ()
 		
 
-		receiver_thread = threading.Thread(target=self.reciever, args=() ) 
-		receiver_thread.start()
+		self.receiver_thread = threading.Thread(target=self.reciever, args=() ) 
+		self.receiver_thread.start()
 
 		print """
 		Started tpm with
@@ -287,23 +288,29 @@ def localtest():
 	b = TreeParityMachine (
 						K=config.K, L=config.L, N=config.N,
 						myaddr = ("", 22222),
-						partner_addr_list = [("localhost", 11111), ("localhost", 33333)], 
+						partner_addr_list = [("localhost", 11111), ("localhost", 33333)],
 						IS_MASTER = False
 					)
 	c = TreeParityMachine (
 						K=config.K, L=config.L, N=config.N,
 						myaddr = ("", 33333),
-						partner_addr_list = [("localhost", 11111), ("localhost", 22222)], 
+						partner_addr_list = [("localhost", 11111), ("localhost", 22222)],
 						IS_MASTER = False
 					)
 
 	a = TreeParityMachine (
 						K=config.K, L=config.L, N=config.N,
 						myaddr = ("", 11111),
-						partner_addr_list = [("localhost", 22222), ("localhost", 33333)], 
+						partner_addr_list = [("localhost", 22222), ("localhost", 33333)],
 						IS_MASTER = True
 					)
-
+	
+	while threading.activeCount()>1:
+		time.sleep(1)
+	
+	print " ~~~~~~~~~~~~~~ FINISH ~~~~~~~~~~~~~~ " 
+	
+	
 
 if __name__ == "__main__" :
 	localtest()

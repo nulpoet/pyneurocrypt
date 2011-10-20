@@ -8,6 +8,8 @@ port = 5000
 # Optimal value is 3. Increasing K increases key length but on contrary makes protocol inefficient and less exure
 K = 3
 # For K = 3, increasing L increases security and syncronization time(iterations) steeply 
-L = 4
+L = 3
 # For 2 partners and K = 3, L = 4, increasing N increases security, syncronization time(iterations) and key length increases linearly.
-N = 6
+N = 4
+
+N_machines = 3
