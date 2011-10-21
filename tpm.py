@@ -18,12 +18,14 @@ class TreeParityMachine ():
 	SYNC_COUNT_LIMIT = 100
 
 
-	def __init__(self, K, L, N, myaddr, partner_addr_list, IS_MASTER):
+	def __init__(self, K, L, N, myaddr, partner_addr_list, IS_MASTER, sync_algo='plain'):
 		
 		self.GOT_INPUT = False		
 		self.iterations = 0		
 		self.IS_MASTER = IS_MASTER
+		self.sync_algo = sync_algo
 		self.sync_count = 0
+		self.last_recieved_input_from = None
 		
 		self.K = K
 		self.L = L
@@ -51,7 +53,7 @@ class TreeParityMachine ():
 		
 		# Create socket and bind to address
 		self.UDPSock = socket(AF_INET,SOCK_DGRAM)
-		self.UDPSock.bind(self.myaddr)
+		self.UDPSock.bind( ('', self.myaddr[1]) )
 		
 		self.sender_UDPSock = socket(AF_INET,SOCK_DGRAM)
 
@@ -200,7 +202,7 @@ class TreeParityMachine ():
 				print "Client has exited!"
 				break
 			else:
-				self.log(" received '" + str(data) + "' from " + str(addr) )				
+				self.log(" received '" + str(data) + "' from " + str(addr) )
 				s = str(data)
 #				print "s : ", s
 				if int(s[0]) == self.START_SYNC :
@@ -209,6 +211,9 @@ class TreeParityMachine ():
 				elif int(s[0]) == self.DONE_SYNC :
 					print "sync done with key : " + str(self.w)
 				elif int(s[0]) == self.SHARE_INPUT :
+					
+					self.last_recieved_input_from = addr
+					
 					s_list = s.split(' ')
 					x_list = s_list[1].split(':')
 					
@@ -250,8 +255,12 @@ class TreeParityMachine ():
 						if self.sync_count == self.SYNC_COUNT_LIMIT:
 							print "\nSYNCED in "+str(self.iterations)+" iterations with key : \n" + str(self.w) + "\n"													
 							sys.exit()
-						elif self.IS_MASTER == True :
-							self.generate_x()
+						elif self.sync_algo == 'plain':
+							if self.IS_MASTER == True :
+								self.generate_x()
+						elif self.sync_algo == 'queries':
+							if self.is_it_my_turn():
+								self.generate_query()
 					else:
 						print self.myaddr, " SHARE_OUTPUTs recvd too early."
 		

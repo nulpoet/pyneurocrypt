@@ -69,7 +69,7 @@ class Generator():
             
             tpm = TreeParityMachine (
                             self.K, self.L, self.N,
-                            myaddr = ("", myport),
+                            myaddr = ("localhost", myport),
                             partner_addr_list = partner_addr_list, 
                             IS_MASTER = master
                         )
