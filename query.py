@@ -24,7 +24,7 @@ def prod(x, w):
         p += x[i] * w[i]
     return p
 
-N = 40
+N = 1000
 L = 4
 H = 1.4
 
@@ -56,7 +56,7 @@ for i in range(len(w)):
     wi = w[i]
     n[abs(wi)].append(i)
     
-print 'n : ', n
+#print 'n : ', n
 
 revran = range(1, L+1)
 revran.reverse()
@@ -73,31 +73,36 @@ for l in revran:
         val = 0
     c[l] = int(val)
 
-print 'c : ', c
+#print 'c : ', c
 
 
 for i in n[0]:
     x[i] = rand_plus_minus_one()
 
+def choose(l_in, count):
+    l = list(l_in)
+    chosen = []
+    for bla in range(count):
+        ind = random.randint(0, 100000)
+        ind %= len(l)
+        temp = l.pop(ind)
+        chosen.append(temp)
+    return chosen
+
 for l in range(1, L+1):
-    print 'l : ', l
-#    chosen = []
-#    for bla in range(c[l]):
-#        ind = random.randint(0, 100000)
-#        ind %= len(n[l])
-#        temp = n[l].pop(ind)
-#        chosen.append(temp)
-    combs = list(combinations(n[l], int(c[l])))
-    comb_ind = random.randint(0, len(combs)-1)
-    chosen = combs[comb_ind]
-    print 'l : ', l, '  chosen : ', chosen
+#    print 'l : ', l
+    chosen = choose(n[l], c[l])
+#    combs = list(combinations(n[l], int(c[l])))
+#    comb_ind = random.randint(0, len(combs)-1)
+#    chosen = combs[comb_ind]
+#    print 'l : ', l, '  chosen : ', chosen
     for i in n[l]:
         if i in chosen:
             x[i] = 1 * sgn(w[i])
         else:
             x[i] = -1 * sgn(w[i])
 
-print 'w : ', w
+#print 'w : ', w
 #print 'x : ', x
 
 print 'fact ', fact, '  h_calc : ', prod(x, w)
