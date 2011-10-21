@@ -48,7 +48,7 @@ class Generator():
         self.start_machine(self.port_base, master=True)
         
         while threading.activeCount()>1:
-            time.sleep(1)
+            time.sleep(2)
         
         iterations = self.tpm_list[-1].iterations
         self.tpm_list = []
