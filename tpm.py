@@ -56,6 +56,7 @@ class TreeParityMachine ():
 		self.N = N
 		
 		self.w = []
+		self.partner_ws = {}
 		
 		self.other_outputs ={}		
 		self.x = None
@@ -83,10 +84,10 @@ class TreeParityMachine ():
 		f = open (self.logfilename, 'w')
 		f.close ()
 		
-
+	def start(self):
 		self.receiver_thread = threading.Thread(target=self.reciever, args=()) 
 		self.receiver_thread.start()
-
+		
 		print """
 		Started tpm with
 			myaddr : {0}
@@ -95,7 +96,8 @@ class TreeParityMachine ():
 			K : {3}
 			L : {4}
 			N : {5}
-		""".format (self.myaddr, self.partner_addr_list, self.IS_MASTER, self.K, self.L, self.N)
+			partner_ws : {6}
+		""".format (self.myaddr, self.partner_addr_list, self.IS_MASTER, self.K, self.L, self.N, self.partner_ws)
 		
 	def log(self, a):
 		self.shared_clock += 1
@@ -161,6 +163,7 @@ class TreeParityMachine ():
 		self.iterations += 1
 		if self.iterations % 1000 == 0:
 			print '..', self.iterations, '..'
+			print self.w
 		
 #		s = '.'
 #		for i in range(self.iterations % 100):
@@ -331,11 +334,22 @@ class TreeParityMachine ():
 						self.other_outputs = {}
 						self.GOT_INPUT = False
 						
-						if self.sync_count == self.SYNC_COUNT_LIMIT:
+						is_synced = None
+						if __builtin__.local:
+							is_synced = True
+							for p_w in self.partner_ws:
+								if self.w != p_w:
+									is_synced = False							
+						else:
+							is_synced = self.sync_count == self.SYNC_COUNT_LIMIT
+						
+						if is_synced:
+#						if self.sync_count == self.SYNC_COUNT_LIMIT:
 							s = 'I synced in {0} iterations with w = {1}'.format (self.iterations, self.w)
 							self.log(s)
 							print "\n", self.myaddr, "SYNCED in "+str(self.iterations)+" iterations with key : \n" + str(self.w) + "\n"													
 							sys.exit()
+						
 						if self.IS_MASTER == True:
 							self.generate_x()
 						
@@ -373,25 +387,41 @@ def localtest():
 	# testing 3 TPMs	
 	__builtin__.local = True
 	
+	shared_clock = 0
+	
 	b = TreeParityMachine (
 						K=config.K, L=config.L, N=config.N,
 						myaddr = ("", 22222),
 						partner_addr_list = [("localhost", 11111), ("localhost", 33333)],
-						IS_MASTER = False
+						master_addr = ("localhost", 11111), 
+						shared_clock,
+						sync_algo='plain',
+						H = 0.7						
 					)
 	c = TreeParityMachine (
 						K=config.K, L=config.L, N=config.N,
 						myaddr = ("", 33333),
 						partner_addr_list = [("localhost", 11111), ("localhost", 22222)],
-						IS_MASTER = False
+						master_addr = ("localhost", 11111), 
+						shared_clock,
+						sync_algo='plain',
+						H = 0.7
 					)
 
 	a = TreeParityMachine (
 						K=config.K, L=config.L, N=config.N,
 						myaddr = ("", 11111),
 						partner_addr_list = [("localhost", 22222), ("localhost", 33333)],
-						IS_MASTER = True
+						master_addr = ("localhost", 11111), 
+						shared_clock,
+						sync_algo='plain',
+						H = 0.7
 					)
+	
+	b.start()
+	c.start()
+	
+	a.start()
 	
 	while threading.activeCount()>1:
 		time.sleep(1)

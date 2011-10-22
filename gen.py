@@ -48,12 +48,41 @@ class Generator():
         
         master_addr = ("localhost", self.port_base)
         
-        for i in range(1, self.M):
-            port = self.port_base + i
-            self.start_machine(port, master_addr)
+        for i in range(self.M):
+            myport = self.port_base + i            
+            port_list = list(self.ports)
+            port_list.remove(myport)
+            partner_addr_list = []
+            for p in port_list:
+                partner_addr_list.append( ('localhost', p) )  
+            myaddr = ("localhost", myport)            
+            tpm = TreeParityMachine (
+                        self.K, self.L, self.N,
+                        myaddr,
+                        partner_addr_list, 
+                        master_addr,
+                        self.shared_clock,
+                        self.sync_algo,
+                        self.H
+                    )
+            self.tpm_list.append(tpm)
+        
+        for i in range(self.M):
+            partner_indexes = range(self.M)
+            partner_indexes.pop(i)
+            
+            for p_i in partner_indexes:
+                p_w = self.tpm_list[p_i].w
+                self.tpm_list[i].partner_ws[p_i] = p_w
+        
+        for i in range(1, self.M):            
+            self.tpm_list[i].start()
+#            port = self.port_base + i
+#            self.start_machine(port, master_addr)
         
         # Master is started last
-        self.start_machine(self.port_base, master_addr)
+        self.tpm_list[0].start()
+#        self.start_machine(self.port_base, master_addr)
         
         while threading.activeCount()>1:
             time.sleep(2)
@@ -65,27 +94,27 @@ class Generator():
 
         
             
-    def start_machine(self, port, master_addr):
-        myport = port
-        port_list = list(self.ports)
-        port_list.remove(myport)
-        partner_addr_list = []
-        for p in port_list:
-            partner_addr_list.append( ('localhost', p) )  
-        myaddr = ("localhost", myport)
-        
-        print 'starting tpm with ', ("", myport), partner_addr_list
-        
-        tpm = TreeParityMachine (
-                        self.K, self.L, self.N,
-                        myaddr,
-                        partner_addr_list, 
-                        master_addr,
-                        self.shared_clock,
-                        self.sync_algo,
-                        self.H
-                    )
-        self.tpm_list.append(tpm)
+#    def start_machine(self, port, master_addr):
+#        myport = port
+#        port_list = list(self.ports)
+#        port_list.remove(myport)
+#        partner_addr_list = []
+#        for p in port_list:
+#            partner_addr_list.append( ('localhost', p) )  
+#        myaddr = ("localhost", myport)
+#        
+#        print 'starting tpm with ', ("", myport), partner_addr_list
+#        
+#        tpm = TreeParityMachine (
+#                        self.K, self.L, self.N,
+#                        myaddr,
+#                        partner_addr_list, 
+#                        master_addr,
+#                        self.shared_clock,
+#                        self.sync_algo,
+#                        self.H
+#                    )
+#        self.tpm_list.append(tpm)
 
 
 if __name__ == "__main__" :
