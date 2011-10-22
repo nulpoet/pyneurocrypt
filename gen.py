@@ -8,15 +8,19 @@ import config
 
 class Generator():
     
-    def __init__(self, I, N_machines=config.N_machines, K=config.K, L=config.L, N=config.N):
+    def __init__(self, I, N_machines=config.N_machines, K=config.K, L=config.L, N=config.N, sync_algo='plain'):
         
         __builtin__.local = True
+        
+        self.shared_clock = 0
         
         self.I = I
         self.N_machines = N_machines
         self.K = K
         self.L = L
         self.N = N
+        
+        self.sync_algo = sync_algo
         
         self.tpm_list = []
         
@@ -40,12 +44,15 @@ class Generator():
         print '>>>>> iterations_list : ', self.iterations_list 
         
     def sync(self):
+        
+        master_addr = ("localhost", self.port_base)
+        
         for i in range(1, self.N_machines):
             port = self.port_base + i
-            self.start_machine(port, master=False)
+            self.start_machine(port, master_addr)
         
         # Master is started last
-        self.start_machine(self.port_base, master=True)
+        self.start_machine(self.port_base, master_addr)
         
         while threading.activeCount()>1:
             time.sleep(2)
@@ -57,35 +64,55 @@ class Generator():
 
         
             
-    def start_machine(self, port, master=False):
-            myport = port
-            port_list = list(self.ports)
-            port_list.remove(myport)
-            partner_addr_list = []
-            for p in port_list:
-                partner_addr_list.append( ('localhost', p) )  
-            
-            print 'starting tpm with ', ("", myport), partner_addr_list
-            
-            tpm = TreeParityMachine (
-                            self.K, self.L, self.N,
-                            myaddr = ("localhost", myport),
-                            partner_addr_list = partner_addr_list, 
-                            IS_MASTER = master
-                        )
-            self.tpm_list.append(tpm)
+    def start_machine(self, port, master_addr):
+        myport = port
+        port_list = list(self.ports)
+        port_list.remove(myport)
+        partner_addr_list = []
+        for p in port_list:
+            partner_addr_list.append( ('localhost', p) )  
+        myaddr = ("localhost", myport)
+        
+        print 'starting tpm with ', ("", myport), partner_addr_list
+        
+        tpm = TreeParityMachine (
+                        self.K, self.L, self.N,
+                        myaddr,
+                        partner_addr_list, 
+                        master_addr,
+                        self.shared_clock,
+                        self.sync_algo
+                    )
+        self.tpm_list.append(tpm)
 
 
 if __name__ == "__main__" :
         
-    args = sys.argv    
-    if not (len(args) == 2 or len(args) == 5):
-        print """ usage : gen.py I [<N_machines> <K> <L> <N>] """
-    elif len(args) == 2:
-        g = Generator( int(args[1]) )
+    args = sys.argv
+    sync_algo = 'plain'
+    print args
+    try:
+        args.pop(0)
+        if args[0] == '-q':
+            args.pop(0)
+            sync_algo = 'queries'
+    except:
+        pass
+    
+    print args
+    if not (len(args)==1 or len(args)==2 or len(args)==5):
+        print """ usage : gen.py [-q] I [<N_machines> <K> <L> <N>] """
+    elif len(args) == 1:
+        I = int(args[0])
+        g = Generator(I, sync_algo=sync_algo)
         g.run()
-    elif len(args) == 6: 
-        g = Generator( int(args[1]) ,N_machines=int(args[2]), K=int(args[3]), L=int(args[4]), N=int(args[5]) )
+    elif len(args) == 2:
+        I = int(args[0])
+        N_machines = int(args[1])
+        g = Generator(I, N_machines=N_machines, sync_algo=sync_algo)
+        g.run()
+    elif len(args) == 5: 
+        g = Generator( int(args[0]) ,N_machines=int(args[1]), K=int(args[2]), L=int(args[3]), N=int(args[4]), sync_algo=sync_algo )
         g.run()
     else:
         print '~~~~~~~~~~ IMPOSSIBLE CASE ~~~~~~~~~~'
