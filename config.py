@@ -2,6 +2,8 @@
 port = 5000
 
 
+I = 1
+
 # System Parameters that determine security and key length
 # These need to be configured based on number of partners participating.
 
@@ -12,4 +14,8 @@ L = 3
 # For 2 partners and K = 3, L = 4, increasing N increases security, syncronization time(iterations) and key length increases linearly.
 N = 4
 
-N_machines = 3
+M = 3
+
+sync_algo = 'plain'
+
+H = 0.7

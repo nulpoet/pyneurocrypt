@@ -3,9 +3,11 @@ import random
 from socket import *
 import threading
 import sys
-import __builtin__
-import config
 import time
+import __builtin__
+
+import config
+import query
 
 class TreeParityMachine ():
 	""" ... """
@@ -27,13 +29,14 @@ class TreeParityMachine ():
 	SYNC_COUNT_LIMIT = 100
 
 
-	def __init__(self, K, L, N, myaddr, partner_addr_list, master_addr, shared_clock, sync_algo):
+	def __init__(self, K, L, N, myaddr, partner_addr_list, master_addr, shared_clock, sync_algo, H):
 		
 		self.shared_clock = shared_clock
 		
 		self.GOT_INPUT = False		
 		self.iterations = 0
 		self.sync_algo = sync_algo
+		self.H = H
 		self.sync_count = 0
 #		self.last_recieved_input_from = None
 		self.partner_addr_list = partner_addr_list
@@ -57,14 +60,14 @@ class TreeParityMachine ():
 		self.other_outputs ={}		
 		self.x = None
 		
-		for i in range(self.K) :
+		for i in range(self.K):
 			l = []
-			for j in range(self.N) :
+			for j in range(self.N):
 				r = random.randint(-self.L, self.L)
 				random.seed(r)
-				l.append ( r )
+				l.append(r)
 #				l.append(1)
-			self.w.append (l)
+			self.w.append(l)
 
 
 		# Set the socket parameters		
@@ -72,16 +75,16 @@ class TreeParityMachine ():
 				
 		# Create socket and bind to address
 		self.UDPSock = socket(AF_INET,SOCK_DGRAM)
-		self.UDPSock.bind( ('', self.myaddr[1]) )
+		self.UDPSock.bind( ('', self.myaddr[1]))
 		
 		self.sender_UDPSock = socket(AF_INET,SOCK_DGRAM)
 
-		self.logfilename = "log_" + str( self.myaddr[1] ) 
+		self.logfilename = "log_" + str( self.myaddr[1]) 
 		f = open (self.logfilename, 'w')
 		f.close ()
 		
 
-		self.receiver_thread = threading.Thread(target=self.reciever, args=() ) 
+		self.receiver_thread = threading.Thread(target=self.reciever, args=()) 
 		self.receiver_thread.start()
 
 		print """
@@ -100,18 +103,8 @@ class TreeParityMachine ():
 		s = '{0} - {1} > {2}'.format (self.shared_clock, self.myaddr, a)
 		f.write(s+'\n')
 		f.close()
-
-	def generate_x_by_query(self):
-		print self.myaddr, ' generated query -------------------------------------------'
-		self.generate_x()
-
-	def generate_x (self):
-		
-		print self.myaddr, ' generating x'
-#		if self.sync_algo == 'queries':
-#		else:
-		
-		
+	
+	def generate_plain_x(self):
 		x = []
 		for i in range(self.K) :
 			l = []
@@ -122,15 +115,29 @@ class TreeParityMachine ():
 				else:
 					l.append(1)
 			x.append(l)
+		return x
+
+	def generate_query_x(self):
+		x = []
+		for i in range(self.K) :
+			x_i = query.generate_x_k(self.N, self.L, self.H, self.w[i])
+			x.append(x_i)
+		return x
+
+	def generate_x (self):
 		
+#		print self.myaddr, ' generating x'
+		if self.sync_algo == 'queries':
+			x = self.generate_query_x()
+		else:
+			x = self.generate_plain_x()
+		
+		self.log('I generated input {0}'.format(x))
 #		random.seed(x)
 		
-		self.x = x		
-#		self.log (str(self.myaddr) + " generated : " + str(self.x))
-		
-		self.compute()
-		
-		self.log('I generated input and computed output')		
+		self.x = x
+		self.compute()		
+		self.log('I computed output')		
 		
 		self.GOT_INPUT = True
 		self.switch_master()
@@ -152,10 +159,14 @@ class TreeParityMachine ():
 	def compute(self):
 		
 		self.iterations += 1
-		s = '.'
-		for i in range(self.iterations % 1000):
-			s += '.'
-		print s
+		if self.iterations % 1000 == 0:
+			print '..', self.iterations, '..'
+		
+#		s = '.'
+#		for i in range(self.iterations % 100):
+#			s += '.'
+#			if i % 100 == 0:
+#				print s
 				
 		self.output = 1
 		self.sigmas = []
@@ -330,7 +341,7 @@ class TreeParityMachine ():
 						
 					else:
 						self.log('SHARE_OUTPUTs recvd too early')
-						print self.myaddr, " SHARE_OUTPUTs recvd too early."
+#						print self.myaddr, " SHARE_OUTPUTs recvd too early."
 		
 		
 		# Close socket
