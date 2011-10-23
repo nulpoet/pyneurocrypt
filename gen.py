@@ -34,9 +34,9 @@ class Generator():
 
     def run(self):
         
-#        f_res = open(res, 'a')
-#        f_res.write('\n-------------------------------------------------\n\n')
-#        f_res.close()
+        f_res = open(res, 'a')
+        f_res.write('Started at ' + time.asctime(time.localtime())+' ...   \n')
+        f_res.close()
         
         random.seed(time.localtime())
         for i in range(self.M):
@@ -67,8 +67,8 @@ class Generator():
         d['N'] = self.N
         d['I'] = self.I
         
-        f_res.write(time.asctime('\n'+time.localtime())+'\n')
         f_res.write(json.dumps(d, indent=4)+'\n')
+        f_res.write( '........ended at ' + time.asctime(time.localtime())+'\n\n')
         f_res.close()
         
     def sync(self):

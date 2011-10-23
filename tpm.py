@@ -291,7 +291,7 @@ class TreeParityMachine ():
 #                    print "sync done with key : " + str(self.w)
                     s = 'I synced in {0} iterations with w = {1}'.format (self.iterations, self.w)
                     self.log(s)
-                    print "\n", self.myaddr, "SYNCED in " + str(self.iterations) + " iterations with key : \n" + str(self.w) + "\n"
+                    print "\n", self.myaddr, "SYNCED in " + str(self.iterations) + " iterations\n"# with key : \n" + str(self.w) + "\n"
                     sys.exit()
                 
                 elif msg_type == self.SHARE_INPUT :
@@ -359,7 +359,7 @@ class TreeParityMachine ():
 #                        if self.sync_count == self.SYNC_COUNT_LIMIT:
                             s = 'I synced in {0} iterations with w = {1}'.format (self.iterations, self.w)
                             self.log(s)
-                            print "\n", self.myaddr, "SYNCED in " + str(self.iterations) + " iterations with key : \n" + str(self.w) + "\n"
+                            print "\n", self.myaddr, "SYNCED in " + str(self.iterations) + " iterations\n"# with key : \n" + str(self.w) + "\n"
                             
 #                            self.EXTRA_DEBUG = True
 
