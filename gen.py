@@ -47,9 +47,10 @@ class Generator():
         for i in range(self.I):
             iterations = self.sync()
             print i, '-> ', iterations
+            self.iterations_list.append(iterations)
             print '--> iterations_list : ', self.iterations_list
             print '\n-------------------------------------------------------------------\n'
-            self.iterations_list.append(iterations)
+            
         
         avg_iters = float(sum(self.iterations_list))/len(self.iterations_list)
         print '>>>>> iterations_list : ', self.iterations_list
