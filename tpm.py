@@ -96,8 +96,9 @@ class TreeParityMachine ():
             K : {3}
             L : {4}
             N : {5}
-            H : {6}            
-        """.format (self.myaddr, self.partner_addr_list, self.IS_MASTER, self.K, self.L, self.N, self.H)
+            H : {6}
+            sync_algo : {7}
+        """.format (self.myaddr, self.partner_addr_list, self.IS_MASTER, self.K, self.L, self.N, self.H, self.sync_algo)
         
     def log(self, a):
         self.shared_clock_wrapper[0] += 1
@@ -165,13 +166,16 @@ class TreeParityMachine ():
     def compute(self):
         
         self.iterations += 1
-        if self.iterations < 1000:
+        if self.iterations <= 1000:
             if self.iterations % 100 == 0:
                 print '..', self.iterations, '..'
-        else:
+        elif self.iterations <= 10000:
             if self.iterations % 1000 == 0:
                 print '..', self.iterations, '..'
-        
+        else:
+            if self.iterations % 10000 == 0:
+                print '..', self.iterations, '..'
+                
         self.output = 1
         self.sigmas = []
         

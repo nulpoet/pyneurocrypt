@@ -46,7 +46,8 @@ class Generator():
         
         for i in range(self.I):
             iterations = self.sync()
-            print i, '> ', iterations
+            print i, '-> ', iterations
+            print '--> iterations_list : ', self.iterations_list
             print '\n-------------------------------------------------------------------\n'
             self.iterations_list.append(iterations)
         
