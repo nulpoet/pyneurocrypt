@@ -21,7 +21,7 @@ class Generator():
         self.K = K
         self.L = L
         self.N = N
-        self.sync_algo = port_base
+        self.sync_algo = sync_algo
         self.H = H
         
         self.tpm_list = []
@@ -58,8 +58,7 @@ class Generator():
         
         d = {}
         d['algo'] = self.sync_algo
-        if self.sync_algo == 'queries':
-            d['H'] = self.H
+        d['H'] = self.H
         d['avg'] = avg_iters
         d['M'] = self.M
         d['K'] = self.K
