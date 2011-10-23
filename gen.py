@@ -33,6 +33,11 @@ class Generator():
 
 
     def run(self):
+        
+        f_res = open(res, 'a')
+        f_res.write('\n-------------------------------------------------\n\n')
+        f_res.close()
+        
         random.seed(time.localtime())
         for i in range(self.M):
             self.ports.append(self.port_base + i)
@@ -48,14 +53,14 @@ class Generator():
         avg_iters = float(sum(self.iterations_list))/len(self.iterations_list)
         print '>>>>> iterations_list : ', self.iterations_list
         print '>>>>> average iterations : ', avg_iters
-        
+                
         f_res = open(res, 'a')
         
-        d = {} 
+        d = {}
         d['algo'] = self.sync_algo
         if self.sync_algo == 'queries':
             d['H'] = self.H
-        d['avg'] = avg_iters        
+        d['avg'] = avg_iters
         d['M'] = self.M
         d['K'] = self.K
         d['L'] = self.L
