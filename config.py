@@ -23,3 +23,5 @@ H = 0.7
 res = '/home/rohit/Dropbox/Work/nc/results.json'
 
 debug = False
+
+port_base = 10000

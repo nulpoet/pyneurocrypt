@@ -10,7 +10,7 @@ import config
 
 class Generator():
     
-    def __init__(self, I, M, K, L, N, sync_algo, H, res, debug):
+    def __init__(self, I, M, K, L, N, sync_algo, H, res, debug, port_base):
         
         __builtin__.local = True
         
@@ -21,12 +21,12 @@ class Generator():
         self.K = K
         self.L = L
         self.N = N
-        self.sync_algo = sync_algo
+        self.sync_algo = port_base
         self.H = H
         
         self.tpm_list = []
         
-        self.port_base = 10001
+        self.port_base = port_base
         self.ports = []
         
         self.iterations_list = []
@@ -159,7 +159,8 @@ if __name__ == "__main__" :
     H = config.H
     res = config.res
     debug = config.debug
-    
+    port_base = config.port_base
+     
     args.pop(0)
     for arg in args:
         l = arg.split('=')
@@ -181,6 +182,8 @@ if __name__ == "__main__" :
             res = l[1]
         elif l[0] == '-d':
             debug = True
+        elif l[0] == '-p':
+            port_base = int(l[1])
         elif l[0] == '-h':
             print """ usage : gen.py [-h] [-d] [-q [-H=[H]]] [-I=<I>] [-M=<M>] [-K=<K>] [-L=<L>] [-N=<N>] """
             sys.exit()
@@ -188,7 +191,7 @@ if __name__ == "__main__" :
             print """ usage : gen.py [-q [-H=[H]]] [-I=<I>] [-M=<M>] [-K=<K>] [-L=<L>] [-N=<N>] """
             sys.exit()
     
-    g = Generator( I, M, K, L, N, sync_algo, H, res, debug)
+    g = Generator( I, M, K, L, N, sync_algo, H, res, debug, port_base)
     g.run()
     
 #    
