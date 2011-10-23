@@ -67,7 +67,8 @@ class Generator():
         d['N'] = self.N
         d['I'] = self.I
         
-        f_res.write( json.dumps(d, indent=4)+'\n')
+        f_res.write(time.asctime('\n'+time.localtime())+'\n')
+        f_res.write(json.dumps(d, indent=4)+'\n')
         f_res.close()
         
     def sync(self):
