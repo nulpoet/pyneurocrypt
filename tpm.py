@@ -30,6 +30,7 @@ class TreeParityMachine ():
 
 
     def __init__(self, K, L, N, myaddr, partner_addr_list, master_addr, shared_clock_wrapper, sync_algo, H, debug):
+        self.debug = debug
         self.EXTRA_DEBUG = False
         self.shared_clock_wrapper = shared_clock_wrapper
         
