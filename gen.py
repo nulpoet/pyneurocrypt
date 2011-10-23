@@ -34,9 +34,9 @@ class Generator():
 
     def run(self):
         
-        f_res = open(res, 'a')
-        f_res.write('\n-------------------------------------------------\n\n')
-        f_res.close()
+#        f_res = open(res, 'a')
+#        f_res.write('\n-------------------------------------------------\n\n')
+#        f_res.close()
         
         random.seed(time.localtime())
         for i in range(self.M):
