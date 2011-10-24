@@ -80,10 +80,11 @@ class TreeParityMachine ():
         self.UDPSock.bind(('', self.myaddr[1]))
         
         self.sender_UDPSock = socket(AF_INET, SOCK_DGRAM)
-
-        self.logfilename = "log_" + str(self.myaddr[1]) 
-        f = open (self.logfilename, 'w')
-        f.close ()
+        
+        if self.debug:
+            self.logfilename = "log_" + str(self.myaddr[1]) 
+            f = open (self.logfilename, 'w')
+            f.close ()
         
     def start(self):
         self.receiver_thread = threading.Thread(target=self.reciever, args=()) 
@@ -99,15 +100,17 @@ class TreeParityMachine ():
             N : {5}
             H : {6}
             sync_algo : {7}
-        """.format (self.myaddr, self.partner_addr_list, self.IS_MASTER, self.K, self.L, self.N, self.H, self.sync_algo)
+            debug : {8}
+        """.format (self.myaddr, self.partner_addr_list, self.IS_MASTER, self.K, self.L, self.N, self.H, self.sync_algo, self.debug)
         
-    def log(self, a):
-        self.shared_clock_wrapper[0] += 1
-        f = open (self.logfilename, 'a')
-        s = '{0} - {1} > {2}'.format (self.shared_clock_wrapper[0], self.myaddr, a)
-#        print s
-        f.write(s + '\n')
-        f.close()
+    def log(self, a):       
+        if self.debug:
+            self.shared_clock_wrapper[0] += 1        
+            f = open (self.logfilename, 'a')
+            s = '{0} - {1} > {2}'.format (self.shared_clock_wrapper[0], self.myaddr, a)
+    #        print s
+            f.write(s + '\n')
+            f.close()
     
     def generate_plain_x(self):        
         x = []
@@ -330,7 +333,7 @@ class TreeParityMachine ():
                     for addr in self.partner_addr_list:
 #                        self.sender_UDPSock.sendto(data, addr)
                         self.sender_UDPSock.sendto(data, addr)
-                        
+                
                 elif msg_type == self.SHARE_OUTPUT:
 #                    s_list = s.split(' ')
 #                    output = s_list[1]
