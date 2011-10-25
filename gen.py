@@ -190,10 +190,10 @@ if __name__ == "__main__" :
         elif l[0] == '-p':
             port_base = int(l[1])
         elif l[0] == '-h':
-            print """ usage : gen.py [-h] [-d] [-q [-H=[H]]] [-I=<I>] [-M=<M>] [-K=<K>] [-L=<L>] [-N=<N>] """
+            print """ usage : gen.py [-h] [-d] [-q [-H=[H]]] [-p=<port base>] [-I=<I>] [-M=<M>] [-K=<K>] [-L=<L>] [-N=<N>] """
             sys.exit()
         else:
-            print """ usage : gen.py [-q [-H=[H]]] [-I=<I>] [-M=<M>] [-K=<K>] [-L=<L>] [-N=<N>] """
+            print """ usage : gen.py [-q [-H=[H]]] [-p=<port base>] [-I=<I>] [-M=<M>] [-K=<K>] [-L=<L>] [-N=<N>] """
             sys.exit()
     
     g = Generator( I, M, K, L, N, sync_algo, H, res, debug, port_base)

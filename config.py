@@ -1,6 +1,7 @@
 # port on which key exchange protocol should run
 port = 5000
-
+iplist = ['10.110.6.252']
+myip = '10.110.6.250'
 
 I = 1
 
@@ -18,7 +19,7 @@ M = 3
 
 sync_algo = 'plain'
 
-H = 2.0
+H = 4.0
 
 res = 'log_results'
 
