@@ -14,7 +14,7 @@ class KeySync():
     
     def __init__(self, iplist, myip, port, K, L, N, sync_algo, H, debug):
         
-        __builtin__.local = True
+        __builtin__.local = False
         
         self.shared_clock_wrapper = [0]
         
