@@ -299,7 +299,7 @@ class TreeParityMachine ():
 #                    print "sync done with key : " + str(self.w)
                     s = 'I synced in {0} iterations with w = {1}'.format (self.iterations, self.w)
                     self.log(s)
-                    print "\n", self.myaddr, "SYNCED in " + str(self.iterations) + " iterations\n"# with key : \n" + str(self.w) + "\n"
+                    print "\n", self.myaddr, "SYNCED in " + str(self.iterations) + " iterations\n with key : \n" + str(self.w) + "\n"
                     sys.exit()
                 
                 elif msg_type == self.SHARE_INPUT :
@@ -367,7 +367,7 @@ class TreeParityMachine ():
 #                        if self.sync_count == self.SYNC_COUNT_LIMIT:
                             s = 'I synced in {0} iterations with w = {1}'.format (self.iterations, self.w)
                             self.log(s)
-                            print "\n", self.myaddr, "SYNCED in " + str(self.iterations) + " iterations\n"# with key : \n" + str(self.w) + "\n"
+                            print "\n", self.myaddr, "SYNCED in " + str(self.iterations) + " iterations\n with key : \n" + str(self.w) + "\n"
                             
 #                            self.EXTRA_DEBUG = True
 
@@ -406,56 +406,4 @@ def is_unordered_partner_list_equal (l1, l2):
     for x in tl2:
         if not(x in tl1):
             return False
-    return True    
-
-
-def localtest():
-    
-    # testing 3 TPMs    
-    __builtin__.local = True
-    
-    shared_clock_wrapper = [0]
-    
-    b = TreeParityMachine (
-                        config.K, config.L, config.N,
-                        ("localhost", 22222),
-                        [("localhost", 11111), ("localhost", 33333)],
-                        ("localhost", 11111),
-                        shared_clock_wrapper[0],
-                        'plain',
-                        0.7                        
-                    )
-    c = TreeParityMachine (
-                        config.K, config.L, config.N,
-                        ("", 33333),
-                        [("localhost", 11111), ("localhost", 22222)],
-                        ("localhost", 11111),
-                        shared_clock_wrapper[0],
-                        'plain',
-                        0.7
-                    )
-
-    a = TreeParityMachine (
-                        config.K, config.L, config.N,
-                        ("localhost", 11111),
-                        [("localhost", 22222), ("localhost", 33333)],
-                        ("localhost", 11111),
-                        shared_clock_wrapper[0],
-                        'plain',
-                        0.7
-                    )
-    
-    b.start()
-    c.start()
-    
-    a.start()
-    
-    while threading.activeCount() > 1:
-        time.sleep(1)
-    
-    print " ~~~~~~~~~~~~~~ FINISH ~~~~~~~~~~~~~~ " 
-    
-    
-
-if __name__ == "__main__" :
-    localtest()
+    return True

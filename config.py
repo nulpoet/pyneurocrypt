@@ -18,9 +18,9 @@ M = 3
 
 sync_algo = 'plain'
 
-H = 0.7
+H = 2.0
 
-res = '/home/rohit/Dropbox/Work/nc/results.json'
+res = 'log_results'
 
 debug = False
 

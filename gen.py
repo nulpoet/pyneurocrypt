@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys
 import __builtin__
 import threading
@@ -29,12 +31,14 @@ class Generator():
         self.port_base = port_base
         self.ports = []
         
+        self.res = res
+        
         self.iterations_list = []
 
 
     def run(self):
         
-        f_res = open(res, 'a')
+        f_res = open(self.res, 'a')
         f_res.write('Started at ' + time.asctime(time.localtime())+' ...   \n')
         f_res.close()
         
@@ -56,7 +60,7 @@ class Generator():
         print '>>>>> iterations_list : ', self.iterations_list
         print '>>>>> average iterations : ', avg_iters
                 
-        f_res = open(res, 'a')
+        f_res = open(self.res, 'a')
         
         d = {}
         d['algo'] = self.sync_algo
